@@ -19,35 +19,6 @@ const userLogin = (request, response) => {
   });
 };
 
-// const verifyToken = (request, response) => {
-//   const token = req.body.token || req.query.token;
-//   if (!token) {
-//     return res.status(400).json({
-//       error: true,
-//       message: "Token diperlukan."
-//     });
-//   }
-//   // check token that was passed by decoding token using secret
-//   jwt.verify(token, process.env.JWT_SECRET, function (err, user) {
-//     if (err) return res.status(401).json({
-//       error: true,
-//       message: "Invalid token."
-//     });
- 
-//     // return 401 status if the userId does not match.
-//     if (user.userId !== userData.userId) {
-//       return res.status(401).json({
-//         error: true,
-//         message: "Invalid user."
-//       });
-//     }
-//     // get basic user details
-//     var userObj = utils.getCleanUser(userData);
-//     return res.json({ user: userObj, token });
-//   });
-// };
-
-
 // Faskes
 
 const registerPasien = (request, response) => {
@@ -73,8 +44,8 @@ const inputPemeriksaanPasien = (request, response) => {
 };
 
 const inputRujukanLab = (request, response) => {
-  const {id_pasien, id_lab, sputum, swab, bal, serum} = request.body;
-  pool.query("INSERT INTO rujukan_lab (id_pasien, id_lab, sputum, swab, bal, serum, waktu_rujukan) VALUES ($1,$2,$3,$4,$5,$6,NOW())", [id_pasien, id_lab, sputum, swab, bal, serum], (error, results) => {
+  const {id_pasien, id_lab} = request.body;
+  pool.query("INSERT INTO rujukan_lab (id_pasien, id_lab, waktu_rujukan) VALUES ($1,$2,NOW())", [id_pasien, id_lab], (error, results) => {
       if (error) {
           console.log(error);
       } else {
@@ -115,13 +86,25 @@ const getDaftarLab = (request, response) => {
   });
 };
 
-const getDaftarSpesimen = (request, response) => {
-  pool.query("SELECT id_lab, kode_lab, nama_lab FROM lab", (error, results) => {
-    if (error) {
-      console.log(error);
-    } else {
-      response.status(200).json(results.rows);
-    }
+const inputHasilLab = (request, response) => {
+  const {hasil_pengujian, id_spesimen} = request.body;
+  pool.query("UPDATE spesimen_lab SET waktu_pengujian = NOW() AND hasil_pengujian = $1 WHERE id_spesimen = $2", [hasil_pengujian, id_spesimen], (error, results) => {
+      if (error) {
+          console.log(error);
+      } else {
+          response.status(201).send(`Berhasil diupdate.`)
+      }
+  });
+};
+
+const terimaSpesimen = (request, response) => {
+  const {id_rujukan} = request.body;
+  pool.query("UPDATE spesimen_lab SET waktu_terima = NOW() WHERE id_rujukan = $1", [id_rujukan], (error, results) => {
+      if (error) {
+          console.log(error);
+      } else {
+          response.status(201).send(`Berhasil diupdate.`)
+      }
   });
 };
 
@@ -133,5 +116,7 @@ module.exports = {
   getDaftarSpesimen,
   inputRujukanPasien,
   inputRujukanLab,
-  getTabelICD
+  getTabelICD,
+  inputHasilLab,
+  terimaSpesimen
 };

@@ -27,7 +27,7 @@ app.get ("/faskes/tabel_icd", db.getTabelICD);
 app.get("/lab/daftar_lab", db.getDaftarLab);
 app.put("/lab/input_hasil", db.inputHasilLab);
 app.put("/lab/terima_spesimen", db.terimaSpesimen);
-// app.get("/lab/hasil_lab", db.hasilLab);
+app.get("/lab/hasil_lab", db.hasilLab);
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`);

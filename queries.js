@@ -108,6 +108,17 @@ const terimaSpesimen = (request, response) => {
   });
 };
 
+// const hasilLab = (request, response) => {
+//   const {id_rujukan} = request.body;
+//   pool.query("UPDATE spesimen_lab SET waktu_terima = NOW() WHERE id_rujukan = $1", [id_rujukan], (error, results) => {
+//       if (error) {
+//           console.log(error);
+//       } else {
+//           response.status(201).send(`Berhasil diupdate.`)
+//       }
+//   });
+// };
+
 module.exports = {
   userLogin,
   getDaftarLab,

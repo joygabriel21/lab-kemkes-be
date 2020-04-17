@@ -14,9 +14,12 @@ const userLogin = (request, response) => {
         // generate token
         // const token = utils.generateToken(results.rows);
         const user = results.rows
-        const token = jwt.sign({ user }, process.env.JWT_SECRET);
-        // return the token along with user details
-        return response.json({ token });
+        if (user.length) {
+          const token = jwt.sign({ user }, process.env.JWT_SECRET);
+                  // return the token along with user details
+          return response.status(201).json({ token, user });
+        }
+        return response.json({ error: 'result not found'})
       }
   });
 };

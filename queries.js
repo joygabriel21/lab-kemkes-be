@@ -2,24 +2,23 @@ const { pool } = require("./config");
 var jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-
 // Core
 
 const userLogin = (request, response) => {
   const {username, password} = request.body;
-  pool.query("SELECT username,role,user_level,aktif,nama_lengkap FROM akun a JOIN user_level u ON a.role=u.id_ul WHERE username = $1 AND password = $2", [username, password], (error, results) => {
-      if (results.rows.length > 0)
-      {
-          // generate token
-          const user = results.rows
-          const token = jwt.sign({ user }, process.env.JWT_SECRET);
-          // return the token along with user details
-          return response.json({ code: 200, token });
-      }
-      else
-      {
-        return response.json({ code: 401 });
+  pool.query("SELECT username,role,user_level,aktif FROM akun a JOIN user_level u ON a.role=u.id_ul WHERE username = $1 AND password = $2", [username, password], (error, results) => {
+      if (error) {
+          return response.status(500).json({ error: 'something went wrong'})
       } 
+        // generate token
+        // const token = utils.generateToken(results.rows);
+        const user = results.rows
+        if (!user.length) return response.status(401).json({ error: 'unauthorized user'})
+
+        const token = jwt.sign({ user }, process.env.JWT_SECRET);
+        // return the token along with user details
+        return response.status(201).json({ token, user });
+
   });
 };
 

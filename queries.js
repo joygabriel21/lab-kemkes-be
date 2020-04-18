@@ -9,7 +9,7 @@ const userLogin = (request, response) => {
   const {username, password} = request.body;
   pool.query("SELECT username,role,user_level,aktif FROM akun a JOIN user_level u ON a.role=u.id_ul WHERE username = $1 AND password = $2", [username, password], (error, results) => {
       if (error) {
-          console.log(error);
+          return response.json({ error: 'something went wrong'})
       } else {
         // generate token
         // const token = utils.generateToken(results.rows);
@@ -17,7 +17,7 @@ const userLogin = (request, response) => {
         if (user.length) {
           const token = jwt.sign({ user }, process.env.JWT_SECRET);
                   // return the token along with user details
-          return response.status(201).json({ token, user });
+          return response.status(201).json({ token });
         }
         return response.json({ error: 'result not found'})
       }

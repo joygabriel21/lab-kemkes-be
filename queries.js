@@ -45,16 +45,54 @@ const getDaftarRegency = (request, response) => {
 // Faskes
 
 const registerPasien = (request, response) => {
-  const {nama_pasien, tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi} = request.body;
-  pool.query("INSERT INTO info_pasien (tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi, waktu_pendaftaran) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, NOW()", [nama_pasien, tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi], (error, results) => {
+  const {data_pasien, username} = request.body;
+  pool.query(`
+    SELECT COUNT(kode_pasien) as jumlah
+    from info_pasien
+    where id_regency=$1 AND id_provinsi=$2
+  `, [data_pasien.id_regency, data_pasien.id_provinsi], (err, res) => {
+    if (err) return response.json({error: err})
+    const urutan = res.rows[0].jumlah
+    const kode_pasien = `${data_pasien.id_provinsi}${data_pasien.id_regency}${username}${+urutan+1}`
+  pool.query(`
+  INSERT INTO info_pasien (
+    nama_pasien,
+    tanggal_lahir,
+    tempat_lahir,
+    id_gender,
+    status_kehamilan,
+    nama_kk,
+    nik,
+    alamat,
+    id_regency,
+    id_provinsi,
+    telepon,
+    kode_pasien,
+    waktu_pendaftaran) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11, $12, NOW())
+  `,
+  [
+    data_pasien.nama_pasien,
+    data_pasien.tanggal_lahir,
+    data_pasien.tempat_lahir,
+    data_pasien.id_gender,
+    data_pasien.status_kehamilan,
+    data_pasien.nama_kk,
+    data_pasien.nik,
+    data_pasien.alamat,
+    data_pasien.id_regency,
+    data_pasien.id_provinsi,
+    data_pasien.telepon,
+    kode_pasien
+  ], (error, results) => {
       if (error) {
-        console.log(error)
         return response.json({error: error})
 
       } else {
           response.status(201).send(`Response added successfully.`)
       }
   });
+
+  })
 };
 
 const inputPemeriksaanPasien = (request, response) => {

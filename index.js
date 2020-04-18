@@ -16,7 +16,8 @@ app.use(
 
 // Core
 app.post("/user/login", db.userLogin);
-// app.get("/user/verify_token", db.verifyToken);
+app.get("/core/get_provinsi", db.getDaftarProvinsi);
+app.get("/core/get_regency", db.getDaftarRegency);
 // Faskes
 app.post("/faskes/register_pasien", db.registerPasien);
 app.post("/faskes/input_pemeriksaan", db.inputPemeriksaanPasien);

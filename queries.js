@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const userLogin = (request, response) => {
   const {username, password} = request.body;
-  pool.query("SELECT username,role,user_level,aktif FROM akun a JOIN user_level u ON a.role=u.id_ul WHERE username = $1 AND password = $2", [username, password], (error, results) => {
+  pool.query("SELECT username,role,user_level,nama_lengkap,aktif FROM akun a JOIN user_level u ON a.role=u.id_ul WHERE username = $1 AND password = $2", [username, password], (error, results) => {
       if (error) {
           return response.status(500).json({ error: 'something went wrong'})
       } 
@@ -22,13 +22,35 @@ const userLogin = (request, response) => {
   });
 };
 
+const getDaftarProvinsi = (request, response) => {
+  pool.query("SELECT id_provinsi, nama_provinsi FROM provinsi", (error, results) => {
+      if (error) {
+        response.json({ error})
+      } else {
+        response.status(200).json(results.rows);
+      }
+  });
+};
+
+const getDaftarRegency = (request, response) => {
+  pool.query("SELECT id_regency, nama_regency FROM regency", (error, results) => {
+      if (error) {
+        response.json({ error})
+      } else {
+        response.status(200).json(results.rows);
+      }
+  });
+};
+
 // Faskes
 
 const registerPasien = (request, response) => {
   const {nama_pasien, tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi} = request.body;
-  pool.query("INSERT INTO info_pasien (id_pasien, tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi, waktu_pendaftaran) VALUES (0,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10, NOW()", [nama_pasien, tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi], (error, results) => {
+  pool.query("INSERT INTO info_pasien (tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi, waktu_pendaftaran) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, NOW()", [nama_pasien, tanggal_lahir, tempat_lahir, id_gender, status_kehamilan, nama_kk, nik, alamat, id_regency, id_provinsi], (error, results) => {
       if (error) {
-          console.log(error);
+        console.log(error)
+        return response.json({error: error})
+
       } else {
           response.status(201).send(`Response added successfully.`)
       }
@@ -123,6 +145,8 @@ const hasilLab = (request, response) => {
 
 module.exports = {
   userLogin,
+  getDaftarProvinsi,
+  getDaftarRegency,
   getDaftarLab,
   registerPasien,
   inputPemeriksaanPasien,

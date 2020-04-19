@@ -212,7 +212,7 @@ const getDaftarPasien = (request, response) => {
     `SELECT 
       id_pasien,
       nama_pasien,
-      tanggal_lahir,
+      date_part('year',age(tanggal_lahir)) as umur,
       tempat_lahir,
       gender_name,
       status_kehamilan,

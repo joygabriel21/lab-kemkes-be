@@ -114,7 +114,7 @@ const registerPasien = (request, response) => {
 
 const inputPemeriksaanPasien = (request, response) => {
   const {
-    id_pasien,
+    kode_pasien,
     no_rekmed,
     suhu_tubuh,
     batuk,
@@ -131,9 +131,9 @@ const inputPemeriksaanPasien = (request, response) => {
     diagnosa_prosedur,
   } = request.body;
   pool.query(
-    "INSERT INTO pemeriksaan_pasien (id_pasien, no_rekmed, suhu_tubuh, batuk, sakit_tenggorokan, sesak_napas, pilek, lesu, sakit_kepala, tanda_pneumonia, diare, mual, diagnosa_primer, diagnosa_sekunder, diagnosa_prosedur, waktu_pemeriksaan) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW())",
+    "INSERT INTO pemeriksaan_pasien (kode_pasien, no_rekmed, suhu_tubuh, batuk, sakit_tenggorokan, sesak_napas, pilek, lesu, sakit_kepala, tanda_pneumonia, diare, mual, diagnosa_primer, diagnosa_sekunder, diagnosa_prosedur, waktu_pemeriksaan) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW())",
     [
-      id_pasien,
+      kode_pasien,
       no_rekmed,
       suhu_tubuh,
       batuk,
@@ -160,10 +160,10 @@ const inputPemeriksaanPasien = (request, response) => {
 };
 
 const inputRujukanLab = (request, response) => {
-  const { id_pasien, id_lab } = request.body;
+  const { kode_pasien, kode_lab } = request.body;
   pool.query(
-    "INSERT INTO rujukan_lab (id_pasien, id_lab, waktu_rujukan) VALUES ($1,$2,NOW())",
-    [id_pasien, id_lab],
+    "INSERT INTO rujukan_lab (kode_pasien, kode_lab, waktu_rujukan) VALUES ($1,$2,NOW())",
+    [kode_pasien, kode_lab],
     (error, results) => {
       if (error) {
         console.log(error);
@@ -176,14 +176,14 @@ const inputRujukanLab = (request, response) => {
 
 const inputRujukanPasien = (request, response) => {
   const {
-    id_pasien,
+    kode_pasien,
     faskes_asal,
     faskes_tujuan,
     alasan_merujuk,
   } = request.body;
   pool.query(
-    "INSERT INTO rujukan_pasien (id_rujukan, faskes_asal, faskes_tujuan, id_faskes, alasan_merujuk, waktu_rujukan) VALUES ($1,$2,$3,$4,NOW())",
-    [id_pasien, faskes_asal, faskes_tujuan, alasan_merujuk],
+    "INSERT INTO rujukan_pasien (kode_pasien, faskes_asal, faskes_tujuan, alasan_merujuk, waktu_rujukan) VALUES ($1,$2,$3,$4,NOW())",
+    [kode_pasien, faskes_asal, faskes_tujuan, alasan_merujuk],
     (error, results) => {
       if (error) {
         console.log(error);
@@ -207,7 +207,7 @@ const getTabelICD = (request, response) => {
   );
 };
 
-const getDaftarPasien = (request, response) => {
+const getDaftarPasienFaskes = (request, response) => {
   pool.query(
     `SELECT 
       id_pasien,
@@ -320,6 +320,42 @@ const getDaftarPasienLab = (request, response) => {
   );
 };
 
+// Surveillance
+
+const getDaftarPasien = (request, response) => {
+  pool.query(
+    `SELECT 
+      id_pasien,
+      nama_pasien,
+      tanggal_lahir,
+      tempat_lahir,
+      gender_name,
+      status_kehamilan,
+      nama_kk,
+      nik,
+      alamat, 
+      nama_regency,
+      nama_provinsi,
+      telepon,
+      kode_pasien,
+      waktu_pendaftaran
+      FROM info_pasien p
+      JOIN gender g
+      ON p.id_gender = g.id_gender
+      JOIN provinsi pr
+      ON p.id_provinsi = pr.id_provinsi
+      JOIN regency r
+      ON p.id_regency = r.id_regency`,
+    (error, results) => {
+      if (error) {
+        response.json({ error });
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
 module.exports = {
   userLogin,
   getDaftarProvinsi,
@@ -330,9 +366,10 @@ module.exports = {
   inputRujukanPasien,
   inputRujukanLab,
   getTabelICD,
-  getDaftarPasien,
+  getDaftarPasienFaskes,
   getDaftarPasienLab,
   inputHasilLab,
   terimaSpesimen,
   hasilLab,
+  getDaftarPasien,
 };

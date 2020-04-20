@@ -24,13 +24,15 @@ app.post("/faskes/input_pemeriksaan", db.inputPemeriksaanPasien);
 app.post("/faskes/input_lab/", db.inputRujukanLab);
 app.post("/faskes/input_rujukan/", db.inputRujukanPasien);
 app.get("/faskes/tabel_icd", db.getTabelICD);
-app.get("/faskes/daftar_pasien", db.getDaftarPasien);
+app.get("/faskes/daftar_pasien", db.getDaftarPasienFaskes);
 // Lab
 app.get("/lab/daftar_lab", db.getDaftarLab);
 app.put("/lab/input_hasil", db.inputHasilLab);
 app.put("/lab/terima_spesimen", db.terimaSpesimen);
 app.get("/lab/hasil_lab", db.hasilLab);
 app.get("/lab/daftar_pasien", db.getDaftarPasienLab);
+// Surveillance
+app.get("/surveillance/daftar_pasien", db.getDaftarPasien);
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`);

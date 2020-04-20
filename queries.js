@@ -236,33 +236,27 @@ const getDataStatusPasien = (request, response) => {
 const getDaftarPasienFaskes = (request, response) => {
   pool.query(
     `SELECT 
-    id_pasien,
-    nama_pasien,
-    tanggal_lahir,
-    tempat_lahir,
-    gender_name,
-    status_kehamilan,
-    nama_kk,
-    nik,
-    alamat, 
-    nama_regency,
-    nama_provinsi,
-    telepon,
-    p.kode_pasien,
-    status_pasien,
-    status_name
-    waktu_pendaftaran
-    FROM info_pasien p
-    JOIN gender g
-    ON p.id_gender = g.id_gender
-    JOIN provinsi pr
-    ON p.id_provinsi = pr.id_provinsi
-    JOIN regency r
-    ON p.id_regency = r.id_regency
-    JOIN update_pasien u
-    ON p.kode_pasien = u.kode_pasien
-    JOIN status_pasien s
-    ON u.status_pasien = s.id_status`,
+      id_pasien,
+      nama_pasien,
+      date_part('year',age(tanggal_lahir)) as umur,
+      tempat_lahir,
+      gender_name,
+      status_kehamilan,
+      nama_kk,
+      nik,
+      alamat, 
+      nama_regency,
+      nama_provinsi,
+      telepon,
+      kode_pasien,
+      waktu_pendaftaran
+      FROM info_pasien p
+      JOIN gender g
+      ON p.id_gender = g.id_gender
+      JOIN provinsi pr
+      ON p.id_provinsi = pr.id_provinsi
+      JOIN regency r
+      ON p.id_regency = r.id_regency`,
     (error, results) => {
       if (error) {
         response.json({ error });

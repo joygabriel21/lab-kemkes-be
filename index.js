@@ -23,6 +23,8 @@ app.post("/faskes/register_pasien", db.registerPasien);
 app.post("/faskes/input_pemeriksaan", db.inputPemeriksaanPasien);
 app.post("/faskes/input_lab/", db.inputRujukanLab);
 app.post("/faskes/input_rujukan/", db.inputRujukanPasien);
+app.put("/faskes/update_status/", db.updateStatusPasien);
+app.get("/faskes/get_status/", db.getDataStatusPasien);
 app.get("/faskes/tabel_icd", db.getTabelICD);
 app.get("/faskes/daftar_pasien", db.getDaftarPasienFaskes);
 // Lab

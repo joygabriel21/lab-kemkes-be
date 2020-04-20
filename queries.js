@@ -104,7 +104,18 @@ const registerPasien = (request, response) => {
           if (error) {
             return response.json({ error: error });
           } else {
-            response.status(201).send(`Response added successfully.`);
+            const status_pasien = 2;
+            pool.query(
+              `INSERT INTO update_pasien (kode_pasien,status_pasien,waktu_penetapan) VALUES ($1,$2, NOW())`,
+              [kode_pasien, status_pasien],
+              (error, results) => {
+                if (error) {
+                  response.json({ error });
+                } else {
+                  response.status(201).send(`Response added successfully.`);
+                }
+              }
+            );
           }
         }
       );
@@ -160,10 +171,10 @@ const inputPemeriksaanPasien = (request, response) => {
 };
 
 const inputRujukanLab = (request, response) => {
-  const { kode_pasien, kode_lab } = request.body;
+  const { kode_pasien, kode_lab, sputum, swab, bal, serum } = request.body;
   pool.query(
-    "INSERT INTO rujukan_lab (kode_pasien, kode_lab, waktu_rujukan) VALUES ($1,$2,NOW())",
-    [kode_pasien, kode_lab],
+    "INSERT INTO rujukan_lab (kode_pasien, kode_lab, sputum, swab, bal, serum, waktu_rujukan) VALUES ($1,$2,$3,$4,$5,$6,NOW())",
+    [kode_pasien, kode_lab, sputum, swab, bal, serum],
     (error, results) => {
       if (error) {
         console.log(error);
@@ -207,35 +218,71 @@ const getTabelICD = (request, response) => {
   );
 };
 
+const getDataStatusPasien = (request, response) => {
+  const { kode_pasien } = request.body;
+  pool.query(
+    "SELECT id_status, kode_pasien, status_pasien, waktu_penetapan FROM update_pasien WHERE kode_pasien = $1",
+    [kode_pasien],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
 const getDaftarPasienFaskes = (request, response) => {
   pool.query(
     `SELECT 
-      id_pasien,
-      nama_pasien,
-      tanggal_lahir,
-      tempat_lahir,
-      gender_name,
-      status_kehamilan,
-      nama_kk,
-      nik,
-      alamat, 
-      nama_regency,
-      nama_provinsi,
-      telepon,
-      kode_pasien,
-      waktu_pendaftaran
-      FROM info_pasien p
-      JOIN gender g
-      ON p.id_gender = g.id_gender
-      JOIN provinsi pr
-      ON p.id_provinsi = pr.id_provinsi
-      JOIN regency r
-      ON p.id_regency = r.id_regency`,
+    id_pasien,
+    nama_pasien,
+    tanggal_lahir,
+    tempat_lahir,
+    gender_name,
+    status_kehamilan,
+    nama_kk,
+    nik,
+    alamat, 
+    nama_regency,
+    nama_provinsi,
+    telepon,
+    p.kode_pasien,
+    status_pasien,
+    status_name
+    waktu_pendaftaran
+    FROM info_pasien p
+    JOIN gender g
+    ON p.id_gender = g.id_gender
+    JOIN provinsi pr
+    ON p.id_provinsi = pr.id_provinsi
+    JOIN regency r
+    ON p.id_regency = r.id_regency
+    JOIN update_pasien u
+    ON p.kode_pasien = u.kode_pasien
+    JOIN status_pasien s
+    ON u.status_pasien = s.id_status`,
     (error, results) => {
       if (error) {
         response.json({ error });
       } else {
         response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
+const updateStatusPasien = (request, response) => {
+  const { kode_pasien, status_pasien } = request.body;
+  pool.query(
+    "UPDATE update_pasien SET status_pasien = $2 where kode_pasien = $1",
+    [kode_pasien, status_pasien],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(201).send(`Data updated successfully.`);
       }
     }
   );
@@ -270,7 +317,7 @@ const inputHasilLab = (request, response) => {
 const terimaSpesimen = (request, response) => {
   const { id_rujukan } = request.body;
   pool.query(
-    "UPDATE spesimen_lab SET waktu_terima = NOW() WHERE id_rujukan = $1",
+    "UPDATE rujukan_lab SET waktu_diterima = NOW() WHERE id_rujukan=$1",
     [id_rujukan],
     (error, results) => {
       if (error) {
@@ -296,20 +343,42 @@ const hasilLab = (request, response) => {
 };
 
 const getDaftarPasienLab = (request, response) => {
+  const { kode_lab } = request.body;
   pool.query(
     `SELECT 
-    r.kode_pasien, 
-    nama_pasien, 
-    nama_lab,
-    date_part('year',age(tanggal_lahir)) as umur,
+    id_pasien,
+    nama_pasien,
+    tanggal_lahir,
+    tempat_lahir,
     gender_name,
-    nama_regency
-  FROM rujukan_lab r
-  JOIN info_pasien p ON r.kode_pasien = p.kode_pasien
-  JOIN gender g ON p.id_gender = g.id_gender
-  JOIN lab l ON r.kode_lab = l.kode_lab
-  JOIN provinsi pr ON p.id_provinsi = pr.id_provinsi
-  JOIN regency re ON p.id_regency = re.id_regency`,
+    status_kehamilan,
+    nama_kk,
+    nik,
+    alamat, 
+    nama_regency,
+    nama_provinsi,
+    telepon,
+    p.kode_pasien,
+    status_pasien,
+    status_name,
+    id_rujukan,
+    waktu_pendaftaran,
+    CASE WHEN waktu_diterima IS NULL THEN 'spesimen_rs' ELSE 'spesimen_lab' END as status_lab
+    FROM info_pasien p
+    JOIN gender g
+    ON p.id_gender = g.id_gender
+    JOIN provinsi pr
+    ON p.id_provinsi = pr.id_provinsi
+    JOIN regency r
+    ON p.id_regency = r.id_regency
+    JOIN update_pasien u
+    ON p.kode_pasien = u.kode_pasien
+    JOIN status_pasien s
+    ON u.status_pasien = s.id_status
+    JOIN rujukan_lab ru
+    ON p.kode_pasien = ru.kode_pasien
+	WHERE kode_lab = $1`,
+    [kode_lab],
     (error, results) => {
       if (error) {
         response.json({ error });
@@ -362,6 +431,8 @@ module.exports = {
   getDaftarRegency,
   getDaftarLab,
   registerPasien,
+  getDataStatusPasien,
+  updateStatusPasien,
   inputPemeriksaanPasien,
   inputRujukanPasien,
   inputRujukanLab,

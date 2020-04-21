@@ -33,6 +33,7 @@ app.put("/lab/input_hasil", db.inputHasilLab);
 app.put("/lab/terima_spesimen", db.terimaSpesimen);
 app.get("/lab/hasil_lab", db.hasilLab);
 app.get("/lab/daftar_pasien", db.getDaftarPasienLab);
+// app.get("/lab/daftar_labnas", db.getDaftarPasienLabNas);
 // Surveillance
 app.get("/surveillance/daftar_pasien", db.getDaftarPasien);
 

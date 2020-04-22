@@ -279,7 +279,7 @@ const getDaftarPasienFaskes = (request, response) => {
 const updateStatusPasien = (request, response) => {
   const { kode_pasien, status_pasien } = request.body;
   pool.query(
-    "UPDATE update_pasien SET status_pasien = $2 where kode_pasien = $1",
+    "INSERT INTO update_pasien (kode_pasien, status_pasien, waktu_penetapan) VALUES ($1,$2,NOW())",
     [kode_pasien, status_pasien],
     (error, results) => {
       if (error) {

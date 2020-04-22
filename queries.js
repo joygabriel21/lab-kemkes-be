@@ -55,7 +55,7 @@ const getDaftarRegency = (request, response) => {
 // Faskes
 
 const registerPasien = (request, response) => {
-  const { data_pasien } = request.body;
+  const { data_pasien, username } = request.body;
   pool.query(
     `
     SELECT COUNT(kode_pasien) as jumlah
@@ -238,27 +238,34 @@ const getDataStatusPasien = (request, response) => {
 const getDaftarPasienFaskes = (request, response) => {
   pool.query(
     `SELECT 
-      id_pasien,
-      nama_pasien,
-      date_part('year',age(tanggal_lahir)) as umur,
-      tempat_lahir,
-      gender_name,
-      status_kehamilan,
-      nama_kk,
-      nik,
-      alamat, 
-      nama_regency,
-      nama_provinsi,
-      telepon,
-      kode_pasien,
-      waktu_pendaftaran
-      FROM info_pasien p
-      JOIN gender g
-      ON p.id_gender = g.id_gender
-      JOIN provinsi pr
-      ON p.id_provinsi = pr.id_provinsi
-      JOIN regency r
-      ON p.id_regency = r.id_regency`,
+    id_pasien,
+    nama_pasien,
+    date_part('year',age(tanggal_lahir)) as umur,
+    tempat_lahir,
+    gender_name,
+    status_kehamilan,
+    nama_kk,
+    nik,
+    alamat, 
+    nama_regency,
+    nama_provinsi,
+    telepon,
+    p.kode_pasien,
+    status_name,
+    status_pasien,
+    waktu_pendaftaran
+    FROM info_pasien p
+    JOIN gender g
+    ON p.id_gender = g.id_gender
+    JOIN provinsi pr
+    ON p.id_provinsi = pr.id_provinsi
+    JOIN regency r
+    ON p.id_regency = r.id_regency
+    JOIN update_pasien u
+    ON p.kode_pasien = u.kode_pasien
+    JOIN status_pasien s
+    ON u.status_pasien = s.id_status
+    `,
     (error, results) => {
       if (error) {
         response.json({ error });
@@ -311,10 +318,30 @@ const getDaftarLab = (request, response) => {
 };
 
 const inputHasilLab = (request, response) => {
-  const { hasil_pengujian, id_spesimen } = request.body;
+  const {
+    id_rujukan,
+    swab,
+    sampel_swab,
+    sputum,
+    sampel_sputum,
+    lab,
+    sampel_lab,
+    serum,
+    sampel_serum,
+  } = request.body;
   pool.query(
-    "UPDATE spesimen_lab SET waktu_pengujian = NOW() AND hasil_pengujian = $1 WHERE id_spesimen = $2",
-    [hasil_pengujian, id_spesimen],
+    "INSERT INTO hasil_spesimen (id_rujukan, swab, sampel_swab, sputum, sampel_sputum, lab, sampel_lab, serum, sampel_serum, waktu_penetapan) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())",
+    [
+      id_rujukan,
+      swab,
+      sampel_swab,
+      sputum,
+      sampel_sputum,
+      lab,
+      sampel_lab,
+      serum,
+      sampel_serum,
+    ],
     (error, results) => {
       if (error) {
         console.log(error);

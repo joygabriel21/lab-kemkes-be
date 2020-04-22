@@ -27,6 +27,7 @@ app.put("/faskes/update_status/", db.updateStatusPasien);
 app.get("/faskes/get_status/", db.getDataStatusPasien);
 app.get("/faskes/tabel_icd", db.getTabelICD);
 app.get("/faskes/daftar_pasien", db.getDaftarPasienFaskes);
+app.get("/faskes/daftar_rujukan", db.getDaftarRujukan);
 // Lab
 app.get("/lab/daftar_lab", db.getDaftarLab);
 app.put("/lab/input_hasil", db.inputHasilLab);

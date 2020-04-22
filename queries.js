@@ -55,7 +55,7 @@ const getDaftarRegency = (request, response) => {
 // Faskes
 
 const registerPasien = (request, response) => {
-  const { data_pasien, username } = request.body;
+  const { data_pasien } = request.body;
   pool.query(
     `
     SELECT COUNT(kode_pasien) as jumlah
@@ -84,7 +84,8 @@ const registerPasien = (request, response) => {
     id_provinsi,
     telepon,
     kode_pasien,
-    waktu_pendaftaran) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11, $12, NOW())
+    faskes_asal,
+    waktu_pendaftaran) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, $11, $12, $13, NOW())
   `,
         [
           data_pasien.nama_pasien,
@@ -99,6 +100,7 @@ const registerPasien = (request, response) => {
           data_pasien.id_provinsi,
           data_pasien.telepon,
           kode_pasien,
+          data_pasien.faskes_asal,
         ],
         (error, results) => {
           if (error) {
@@ -277,6 +279,21 @@ const updateStatusPasien = (request, response) => {
         console.log(error);
       } else {
         response.status(201).send(`Data updated successfully.`);
+      }
+    }
+  );
+};
+
+const getDaftarRujukan = (request, response) => {
+  const {} = request.body;
+  pool.query(
+    "SELECT id_status, kode_pasien, status_pasien, waktu_penetapan FROM update_pasien WHERE kode_pasien = $1",
+    [kode_pasien],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
       }
     }
   );
@@ -481,6 +498,7 @@ module.exports = {
   getDaftarPasienFaskes,
   getDaftarPasienLab,
   // getDaftarPasienLabNas,
+  getDaftarRujukan,
   inputHasilLab,
   terimaSpesimen,
   hasilLab,

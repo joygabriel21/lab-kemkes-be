@@ -52,6 +52,54 @@ const getDaftarRegency = (request, response) => {
   );
 };
 
+const getProfilePasien = (request, response) => {
+  const { kode_pasien } = request.params;
+  pool.query(
+    `SELECT 
+    id_pasien,
+    nama_pasien,
+    date_part('year',age(tanggal_lahir)) as umur,
+    tempat_lahir,
+    gender_name,
+    status_kehamilan,
+    nama_kk,
+    nik,
+    alamat, 
+    nama_regency,
+    nama_provinsi,
+    telepon,
+    p.kode_pasien,
+    status_name,
+    status_pasien,
+    nama_faskes,
+    hasil_test,
+    waktu_pendaftaran
+    FROM info_pasien p
+    JOIN gender g
+    ON p.id_gender = g.id_gender
+    JOIN provinsi pr
+    ON p.id_provinsi = pr.id_provinsi
+    JOIN regency r
+    ON p.id_regency = r.id_regency
+    JOIN update_pasien u
+    ON p.kode_pasien = u.kode_pasien
+    JOIN status_pasien s
+    ON u.status_pasien = s.id_status
+    JOIN rujukan_lab l
+    ON p.kode_pasien = l.kode_pasien
+    JOIN faskes f
+    ON p.faskes_asal = f.kode_faskes
+    WHERE p.kode_pasien = $1`,
+    [kode_pasien],
+    (error, results) => {
+      if (error) {
+        response.json({ error });
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
 // Faskes
 
 const registerPasien = (request, response) => {
@@ -306,6 +354,107 @@ const getDaftarRujukan = (request, response) => {
   );
 };
 
+const getDaftarPengirimanLab = (request, response) => {
+  const { kode_faskes } = request.params;
+  pool.query(
+    `SELECT 
+    i.kode_pasien,
+    nama_pasien,
+    date_part('year',age(tanggal_lahir)) as umur,
+    kode_lab,
+    waktu_rujukan
+FROM rujukan_lab ru
+JOIN info_pasien i
+ON ru.kode_pasien = i.kode_pasien
+WHERE faskes_perujuk = $1 AND waktu_rujukan IS NOT NULL AND waktu_diterima IS NULL`,
+    [kode_faskes],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
+const getDaftarDiterimaLab = (request, response) => {
+  const { kode_faskes } = request.params;
+  pool.query(
+    `SELECT 
+    i.kode_pasien,
+    nama_pasien,
+    date_part('year',age(tanggal_lahir)) as umur,
+    kode_lab,
+    waktu_rujukan,
+    waktu_diterima
+FROM rujukan_lab ru
+JOIN info_pasien i
+ON ru.kode_pasien = i.kode_pasien
+WHERE faskes_perujuk = $1 AND waktu_rujukan IS NOT NULL AND waktu_diterima IS NOT NULL`,
+    [kode_faskes],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
+const getDaftarDiperiksaLab = (request, response) => {
+  const { kode_faskes } = request.params;
+  pool.query(
+    `SELECT 
+    i.kode_pasien,
+    nama_pasien,
+    date_part('year',age(tanggal_lahir)) as umur,
+    kode_lab,
+    waktu_rujukan,
+    waktu_diterima,
+    CASE WHEN hasil_test = 0 THEN 'Negatif' ELSE 'Positif' END as hasil
+FROM rujukan_lab ru
+JOIN info_pasien i
+ON ru.kode_pasien = i.kode_pasien
+WHERE faskes_perujuk = $1 AND waktu_rujukan IS NOT NULL AND waktu_diterima IS NOT NULL AND waktu_pemeriksaan IS NOT NULL`,
+    [kode_faskes],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
+const getDaftarHasilLab = (request, response) => {
+  const { kode_faskes } = request.params;
+  pool.query(
+    `SELECT 
+    i.kode_pasien,
+    nama_pasien,
+    date_part('year',age(tanggal_lahir)) as umur,
+    kode_lab,
+    waktu_rujukan,
+    waktu_diterima,
+    CASE WHEN hasil_test = 0 THEN 'Negatif' ELSE 'Positif' END as hasil
+FROM rujukan_lab ru
+JOIN info_pasien i
+ON ru.kode_pasien = i.kode_pasien
+WHERE faskes_perujuk = $1 AND waktu_rujukan IS NOT NULL AND waktu_diterima IS NOT NULL`,
+    [kode_faskes],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
 // Lab
 const getDaftarLab = (request, response) => {
   pool.query("SELECT id_lab, kode_lab, nama_lab FROM lab", (error, results) => {
@@ -324,23 +473,38 @@ const inputHasilLab = (request, response) => {
     sampel_swab,
     sputum,
     sampel_sputum,
-    lab,
-    sampel_lab,
+    bal,
+    sampel_bal,
     serum,
     sampel_serum,
+    hasil,
   } = request.body;
   pool.query(
-    "INSERT INTO hasil_spesimen (id_rujukan, swab, sampel_swab, sputum, sampel_sputum, lab, sampel_lab, serum, sampel_serum, waktu_penetapan) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())",
+    `UPDATE 
+      rujukan_lab 
+    SET 
+      swab = $2, 
+      sampel_swab = $3, 
+      sputum = $4, 
+      sampel_sputum = $5, 
+      bal = $6, 
+      sampel_bal = $7,
+      serum  = $8,
+      sampel_serum = $9,
+      hasil_test = $10,
+      waktu_konfirmasi = NOW() 
+    WHERE id_rujukan=$1`,
     [
       id_rujukan,
       swab,
       sampel_swab,
       sputum,
       sampel_sputum,
-      lab,
-      sampel_lab,
+      bal,
+      sampel_bal,
       serum,
       sampel_serum,
+      hasil,
     ],
     (error, results) => {
       if (error) {
@@ -353,7 +517,7 @@ const inputHasilLab = (request, response) => {
 };
 
 const terimaSpesimen = (request, response) => {
-  const { id_rujukan } = request.body;
+  const { id_rujukan } = request.params;
   pool.query(
     "UPDATE rujukan_lab SET waktu_diterima = NOW() WHERE id_rujukan=$1",
     [id_rujukan],
@@ -367,9 +531,19 @@ const terimaSpesimen = (request, response) => {
   );
 };
 
-const hasilLab = (request, response) => {
+const getListSpesimen = (request, response) => {
+  const { id_rujukan } = request.body;
   pool.query(
-    "with total as (select r.id_pasien, r.id_rujukan, s.waktu_pengujian, sum(case when hasil_pengujian = 1 then 1 else 0 end) as total from rujukan_lab r join spesimen_lab s on r.id_rujukan = s.id_rujukan group by 1,2,3 ) select nama_pasien, (CASE WHEN total = 0 THEN 'Negatif' ELSE 'Positif' END) as hasil from total t join info_pasien i on t.id_pasien = i.kode_pasien order by waktu_pengujian desc limit 1",
+    `select 	
+    id_rujukan,
+    swab,
+    sputum,
+    bal,
+    serum
+  from rujukan_lab
+  where id_rujukan = $1
+  `,
+    [id_rujukan],
     (error, results) => {
       if (error) {
         console.log(error);
@@ -381,42 +555,44 @@ const hasilLab = (request, response) => {
 };
 
 const getDaftarPasienLab = (request, response) => {
-  const { kode_lab } = request.body;
+  const { kode_lab, jenis_spesimen } = request.params;
   pool.query(
-    `SELECT 
-    id_pasien,
-    nama_pasien,
-    tanggal_lahir,
-    tempat_lahir,
-    gender_name,
-    status_kehamilan,
-    nama_kk,
-    nik,
-    alamat, 
-    nama_regency,
-    nama_provinsi,
-    telepon,
-    p.kode_pasien,
-    status_pasien,
-    status_name,
-    id_rujukan,
-    waktu_pendaftaran,
-    CASE WHEN waktu_diterima IS NULL THEN 'spesimen_rs' ELSE 'spesimen_lab' END as status_lab
-    FROM info_pasien p
-    JOIN gender g
-    ON p.id_gender = g.id_gender
-    JOIN provinsi pr
-    ON p.id_provinsi = pr.id_provinsi
-    JOIN regency r
-    ON p.id_regency = r.id_regency
-    JOIN update_pasien u
-    ON p.kode_pasien = u.kode_pasien
-    JOIN status_pasien s
-    ON u.status_pasien = s.id_status
-    JOIN rujukan_lab ru
-    ON p.kode_pasien = ru.kode_pasien
-	WHERE kode_lab = $1`,
-    [kode_lab],
+    `with data as (SELECT 
+      id_pasien,
+      kode_lab,
+      nama_pasien,
+      tanggal_lahir,
+      tempat_lahir,
+      gender_name,
+      status_kehamilan,
+      nama_kk,
+      nik,
+      alamat, 
+      nama_regency,
+      nama_provinsi,
+      telepon,
+      p.kode_pasien,
+      status_pasien,
+      status_name,
+      id_rujukan,
+      waktu_pendaftaran,
+      CASE WHEN waktu_diterima IS NULL THEN 'spesimen_rs' ELSE 'spesimen_lab' END as status_lab
+      FROM info_pasien p
+      JOIN gender g
+      ON p.id_gender = g.id_gender
+      JOIN provinsi pr
+      ON p.id_provinsi = pr.id_provinsi
+      JOIN regency r
+      ON p.id_regency = r.id_regency
+      JOIN update_pasien u
+      ON p.kode_pasien = u.kode_pasien
+      JOIN status_pasien s
+      ON u.status_pasien = s.id_status
+      JOIN rujukan_lab ru
+      ON p.kode_pasien = ru.kode_pasien)
+  SELECT * FROM data
+  WHERE kode_lab = $1 AND status_lab = $2`,
+    [kode_lab, jenis_spesimen],
     (error, results) => {
       if (error) {
         response.json({ error });
@@ -426,53 +602,6 @@ const getDaftarPasienLab = (request, response) => {
     }
   );
 };
-
-// const getDaftarPasienLabNas = (request, response) => {
-//   const { kode_lab } = request.body;
-//   pool.query(
-//     `SELECT
-//     id_pasien,
-//     nama_pasien,
-//     tanggal_lahir,
-//     tempat_lahir,
-//     gender_name,
-//     status_kehamilan,
-//     nama_kk,
-//     nik,
-//     alamat,
-//     nama_regency,
-//     nama_provinsi,
-//     telepon,
-//     p.kode_pasien,
-//     status_pasien,
-//     status_name,
-//     id_rujukan,
-//     waktu_pendaftaran,
-//     CASE WHEN waktu_diterima IS NULL THEN 'spesimen_rs' ELSE 'spesimen_lab' END as status_lab
-//     FROM info_pasien p
-//     JOIN gender g
-//     ON p.id_gender = g.id_gender
-//     JOIN provinsi pr
-//     ON p.id_provinsi = pr.id_provinsi
-//     JOIN regency r
-//     ON p.id_regency = r.id_regency
-//     JOIN update_pasien u
-//     ON p.kode_pasien = u.kode_pasien
-//     JOIN status_pasien s
-//     ON u.status_pasien = s.id_status
-//     JOIN rujukan_lab ru
-//     ON p.kode_pasien = ru.kode_pasien
-// 	WHERE kode_lab = $1`,
-//     [kode_lab],
-//     (error, results) => {
-//       if (error) {
-//         response.json({ error });
-//       } else {
-//         response.status(200).json(results.rows);
-//       }
-//     }
-//   );
-// };
 
 // Surveillance
 
@@ -514,6 +643,7 @@ module.exports = {
   userLogin,
   getDaftarProvinsi,
   getDaftarRegency,
+  getProfilePasien,
   getDaftarLab,
   registerPasien,
   getDataStatusPasien,
@@ -524,10 +654,13 @@ module.exports = {
   getTabelICD,
   getDaftarPasienFaskes,
   getDaftarPasienLab,
-  // getDaftarPasienLabNas,
+  getDaftarPengirimanLab,
+  getDaftarDiterimaLab,
+  getDaftarDiperiksaLab,
+  getDaftarHasilLab,
   getDaftarRujukan,
   inputHasilLab,
   terimaSpesimen,
-  hasilLab,
   getDaftarPasien,
+  getListSpesimen,
 };

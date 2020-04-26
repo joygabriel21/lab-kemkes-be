@@ -466,6 +466,30 @@ const getDaftarLab = (request, response) => {
   });
 };
 
+const getDaftarProfileLabPasien = (request, response) => {
+  const { kode_pasien } = request.params;
+  pool.query(
+    `SELECT 
+    ROW_NUMBER() Over () As pemeriksaan_ke, 
+    kode_pasien, 
+    CASE WHEN hasil_test = 1 THEN 'Positif' ELSE 'Negatif' END hasil_test,
+    DATE(waktu_konfirmasi) as confirm_date
+  FROM rujukan_lab
+  WHERE kode_pasien = $1
+  GROUP BY kode_pasien, hasil_test, confirm_date
+  
+`,
+    [kode_pasien],
+    (error, results) => {
+      if (error) {
+        console.log(error);
+      } else {
+        response.status(200).json(results.rows);
+      }
+    }
+  );
+};
+
 const inputHasilLab = (request, response) => {
   const {
     id_rujukan,
@@ -714,4 +738,5 @@ module.exports = {
   getDaftarPasien,
   getDaftarPasienFullLab,
   getListSpesimen,
+  getDaftarProfileLabPasien,
 };

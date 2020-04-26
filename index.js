@@ -40,6 +40,7 @@ app.put("/lab/terima_spesimen/:id_rujukan", db.terimaSpesimen);
 app.get("/lab/daftar_pasien/:kode_lab/:jenis_spesimen", db.getDaftarPasienLab);
 app.get("/lab/full_pasien/:kode_lab", db.getDaftarPasienFullLab);
 app.get("/lab/list_spesimen", db.getListSpesimen);
+app.get("/lab/profile_pasien/:kode_pasien", db.getDaftarProfileLabPasien);
 // Surveillance
 app.get("/surveillance/daftar_pasien", db.getDaftarPasien);
 

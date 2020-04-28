@@ -284,36 +284,22 @@ const getDataStatusPasien = (request, response) => {
 };
 
 const getDaftarPasienFaskes = (request, response) => {
+  const { kode_faskes } = request.params;
   pool.query(
     `SELECT 
     id_pasien,
-    nama_pasien,
-    date_part('year',age(tanggal_lahir)) as umur,
-    tempat_lahir,
-    gender_name,
-    status_kehamilan,
-    nama_kk,
-    nik,
-    alamat, 
-    nama_regency,
-    nama_provinsi,
-    telepon,
     p.kode_pasien,
-    status_name,
-    status_pasien,
+    nama_pasien,
+        date_part('year',age(tanggal_lahir)) as umur,
+    CASE WHEN id_gender = 0 THEN 'Perempuan' ELSE 'Laki-Laki' END jenis_kelamin,
+    CASE WHEN waktu_rujukan IS NOT NULL THEN 'Dirujuk' ELSE 'Belum Dirujuk' END status_rujukan,
     waktu_pendaftaran
     FROM info_pasien p
-    JOIN gender g
-    ON p.id_gender = g.id_gender
-    JOIN provinsi pr
-    ON p.id_provinsi = pr.id_provinsi
-    JOIN regency r
-    ON p.id_regency = r.id_regency
-    JOIN update_pasien u
-    ON p.kode_pasien = u.kode_pasien
-    JOIN status_pasien s
-    ON u.status_pasien = s.id_status
+    JOIN rujukan_pasien ru
+    ON p.kode_pasien = ru.kode_pasien
+    WHERE ru.faskes_asal = $1
     `,
+    [kode_faskes],
     (error, results) => {
       if (error) {
         response.json({ error });
@@ -579,7 +565,7 @@ const getListSpesimen = (request, response) => {
 };
 
 const getDaftarPasienLab = (request, response) => {
-  const { kode_lab, jenis_spesimen } = request.params;
+  const { kode_lab } = request.params;
   pool.query(
     `with data as (SELECT 
       id_pasien,
@@ -615,8 +601,8 @@ const getDaftarPasienLab = (request, response) => {
       JOIN rujukan_lab ru
       ON p.kode_pasien = ru.kode_pasien)
   SELECT * FROM data
-  WHERE kode_lab = $1 AND status_lab = $2`,
-    [kode_lab, jenis_spesimen],
+  WHERE kode_lab = $1`,
+    [kode_lab],
     (error, results) => {
       if (error) {
         response.json({ error });
